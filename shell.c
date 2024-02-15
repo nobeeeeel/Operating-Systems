@@ -95,6 +95,22 @@ bool isOperator(char *s)
     return false;
 }
 
+bool skipFromOrOperator(char *s){
+    char *operators[] = {
+        ";",
+        "\n",
+        NULL};
+
+    for (int i = 0; operators[i] != NULL; i++)
+    {
+        if (strcmp(s, operators[i]) == 0)
+            return true;
+    }
+    return false;
+}
+
+
+
 /**
  * The function parseOptions parses options.
  * @param lp List pointer to the start of the tokenlist.
@@ -314,7 +330,7 @@ bool parseChain(List *lp, int *statusCode)
 
 void skipToNextCommand(List *lp)
 {
-    while ((*lp)->next != NULL && !isOperator((*lp)->t))
+    while ((*lp)->next != NULL && !skipFromOrOperator((*lp)->t))
     {
         (*lp) = (*lp)->next;
         if ((*lp)->next == NULL)

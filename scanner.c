@@ -11,7 +11,7 @@
  * Reads an inputline from stdin.
  * @return a string containing the inputline.
  */
-char *readInputLine() {
+char *readInputLine(void) {
     int strLen = INITIAL_STRING_SIZE;
     int c = getchar();
     int i = 0;

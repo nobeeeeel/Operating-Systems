@@ -1,9 +1,0 @@
----
-triple:          'arm64-apple-darwin'
-binary-path:     '/Users/nobel/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/University/Y3S2/Operating Systrem/Practical/Lab 2/scheduling copy'
-relocations:
-  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _calculateAverageTurnaroundTime, symObjAddr: 0x0, symBinAddr: 0x100003710, symSize: 0x188 }
-  - { offsetInCU: 0x54, offset: 0x54, size: 0x8, addend: 0x0, symName: _calculateAverageTurnaroundTime, symObjAddr: 0x0, symBinAddr: 0x100003710, symSize: 0x188 }
-  - { offsetInCU: 0xFA, offset: 0xFA, size: 0x8, addend: 0x0, symName: _performScheduling, symObjAddr: 0x188, symBinAddr: 0x100003898, symSize: 0x328 }
-  - { offsetInCU: 0x180, offset: 0x180, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x4B0, symBinAddr: 0x100003BC0, symSize: 0x2F0 }
-...

@@ -1,9 +1,0 @@
----
-triple:          'arm64-apple-darwin'
-binary-path:     '/Users/nobel/Library/CloudStorage/OneDrive-NanyangTechnologicalUniversity/University/Y3S2/Operating Systrem/Practical/Lab 2/Page Replacement (Clock)'
-relocations:
-  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: _isInMemory, symObjAddr: 0x0, symBinAddr: 0x100003C14, symSize: 0x94 }
-  - { offsetInCU: 0x4D, offset: 0x4D, size: 0x8, addend: 0x0, symName: _isInMemory, symObjAddr: 0x0, symBinAddr: 0x100003C14, symSize: 0x94 }
-  - { offsetInCU: 0xBB, offset: 0xBB, size: 0x8, addend: 0x0, symName: _clock, symObjAddr: 0x94, symBinAddr: 0x100003CA8, symSize: 0x1B8 }
-  - { offsetInCU: 0x16F, offset: 0x16F, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x24C, symBinAddr: 0x100003E60, symSize: 0xF4 }
-...

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "scanner.h"
 #include "shell.h"
@@ -8,12 +9,18 @@
 int main(int argc, char *argv[]) {
     char *inputLine;
     List tokenList;
+    List startOfTokenList;
 
     //TODO: Signal back that the loop must stop when "exit" has been encountered (or EOF)
     while (true) {
         inputLine = readInputLine();
-        tokenList = getTokenList(inputLine);
 
+         if (inputLine == NULL) {
+            break;
+        }
+
+        tokenList = getTokenList(inputLine);
+        startOfTokenList = tokenList;
         bool parsedSuccessfully = parseInputLine(&tokenList);
         if (tokenList == NULL && parsedSuccessfully) {
             // Input was parsed successfully and can be accessed in "tokenList"
@@ -27,8 +34,8 @@ int main(int argc, char *argv[]) {
         }
 
         free(inputLine);
-        freeTokenList(tokenList);
+        freeTokenList(startOfTokenList);
+        //system("leaks shell");
     }
-    
     return 0;
 }

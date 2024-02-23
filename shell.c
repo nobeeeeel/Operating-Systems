@@ -4,6 +4,7 @@
 #include <regex.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/wait.h>
 
 #include "scanner.h"
 
@@ -16,7 +17,6 @@
  */
 bool acceptToken(List *lp, char *ident)
 {
-    // printf("comparing %s with %s, bool: %d\n", (*lp)->t, ident, strcmp(((*lp)->t), ident));
     if (*lp != NULL && strcmp(((*lp)->t), ident) == 0)
     {
         *lp = (*lp)->next;
@@ -25,14 +25,56 @@ bool acceptToken(List *lp, char *ident)
     return false;
 }
 
+void freeStrings(char ***strings) {
+    if (*strings != NULL) {
+        for (int i = 0; (*strings)[i] != NULL; i++) {
+            free((*strings)[i]);
+        }
+        free(*strings);
+        *strings = NULL;
+    }
+}
+
+int executeCommand(char *command, char **options)
+{
+    pid_t pid;
+    pid = fork();
+    if (pid < 0)
+    {
+        fprintf(stderr, "fork() could not create a child process!");
+        exit(EXIT_FAILURE);
+    }
+    else if (pid == 0)                                                  //Child process
+    {
+        execvp(command, options);
+        exit(EXIT_FAILURE);                                             //If it got to this line, that means execvp failed and return exit failure
+    }
+    else
+    {
+        int status;
+        waitpid(pid, &status, 0);                                       //Waits for child process with that pid
+        if (WIFEXITED(status))
+        {
+            return WEXITSTATUS(status);                                 //Returns the exit status to status code
+        }
+        else
+        {
+            return -1;                                                  // Indicates abnormal termination
+        }
+    }
+    return -1;
+}
+
+
 /**
  * The function parseExecutable parses an executable.
  * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the executable was parsed successfully.
  */
-bool parseExecutable(List *lp, char *executable)
+//TODO: empty this
+bool parseExecutable(List *lp, char **executable)
 {
-    const char *regexPattern = "^(\\./)?[a-zA-Z0-9]+$";
+    const char *regexPattern = "^((\\./)?[a-zA-Z0-9.]+)+$";
 
     regex_t regex;
     if (regcomp(&regex, regexPattern, REG_EXTENDED) != 0)
@@ -44,8 +86,7 @@ bool parseExecutable(List *lp, char *executable)
     // Execute the regular expression
     if (regexec(&regex, (*lp)->t, 0, NULL, 0) == 0)
     {
-        executable = (char *)malloc(strlen((*lp)->t) + 1);
-        strcpy(executable, (*lp)->t);
+        strcpy(*executable, (*lp)->t);
         (*lp) = (*lp)->next;
     }
     else
@@ -99,12 +140,30 @@ bool skipFromOrOperator(char *s){
     char *operators[] = {
         ";",
         "\n",
+        "&&",
         NULL};
 
     for (int i = 0; operators[i] != NULL; i++)
     {
-        if (strcmp(s, operators[i]) == 0)
+        if (strcmp(s, operators[i]) == 0){
             return true;
+        }
+    }
+    return false;
+}
+
+bool skipFromAndOperator(char *s){
+    char *operators[] = {
+        ";",
+        "\n",
+        "||",
+        NULL};
+
+    for (int i = 0; operators[i] != NULL; i++)
+    {
+        if (strcmp(s, operators[i]) == 0){
+            return true;
+        }
     }
     return false;
 }
@@ -118,9 +177,8 @@ bool skipFromOrOperator(char *s){
  */
 bool parseOptions(List *lp, char ***options)
 {
-    // TODO: store each (*lp)->t as an option, if any exist
-    int numStrings = 1;
-    while (*lp != NULL && !isOperator((*lp)->t))
+    int numStrings = 1;                                                             //First string is the command
+    while (*lp != NULL && !isOperator((*lp)->t))                                    //list must not be empty and not an operator to be an option
     {
         char *newString = (char *)malloc((strlen((*lp)->t) + 1) * sizeof(char));
         strcpy(newString, (*lp)->t);
@@ -143,17 +201,28 @@ bool parseOptions(List *lp, char ***options)
  * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the command was parsed successfully.
  */
-bool parseCommand(List *lp)
+bool parseCommand(List *lp, int *statusCode)
 {
-    char *executable = NULL;
+    char *executable = (char *)malloc((strlen((*lp)->t) + 1) * sizeof(char));
     char **options = NULL;
-    bool parsedExecutable = parseExecutable(lp, executable);
+    bool parsedExecutable = parseExecutable(lp, &executable);
     bool parsedOptions = parseOptions(lp, &options);
-    printf("hello?\n");
-    execvp(executable, &executable);
+    char *path = getenv("PATH");
+    printf("path is: %s\n", path);
+    char *fullPath = (char*)malloc(strlen(executable) + strlen(path) + 2);
+    strcpy(fullPath, path);
+    strcat(fullPath, "/");
+    strcat(fullPath, executable);
 
+    if(access(fullPath, X_OK) == 0){
+        executeCommand(fullPath, options);
+    } else {
+        printf("Error: command not found!\n");
+        *statusCode = 127;
+    }
     free(executable);
-    // freeArrString(options);
+    free(fullPath);
+    freeStrings(&options);
     return parsedExecutable && parsedOptions;
 }
 
@@ -166,16 +235,16 @@ bool parseCommand(List *lp)
  * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the pipeline was parsed successfully.
  */
-bool parsePipeline(List *lp)
+bool parsePipeline(List *lp, int *statusCode)
 {
-    if (!parseCommand(lp))
+    if (!parseCommand(lp, statusCode))
     {
         return false;
     }
 
     if (acceptToken(lp, "|"))
     {
-        return parsePipeline(lp);
+        return parsePipeline(lp, statusCode);
     }
 
     return true;
@@ -189,7 +258,6 @@ bool parsePipeline(List *lp)
 bool parseFileName(List *lp)
 {
     // TODO: Process the file name appropriately
-    //char *fileName = (*lp)->t;
     return true;
 }
 
@@ -202,6 +270,7 @@ bool parseFileName(List *lp)
  * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the redirections were parsed successfully.
  */
+//TODO: empty this
 bool parseRedirections(List *lp)
 {
     if (isEmpty(*lp))
@@ -238,64 +307,24 @@ bool parseRedirections(List *lp)
  */
 bool parseBuiltIn(List *lp, char **command)
 {
-    char *builtIns[] = {
+    char *builtIns[] = {                                                    //List of commands that are recognized as built in
         "exit",
         "status",
         "echo",
         "false",
         "true",
         NULL};
-    *command = (char *)malloc((strlen((*lp)->t) + 1) * sizeof(char));
+    *command = (char *)malloc((strlen((*lp)->t) + 1) * sizeof(char));       //Allocates space for the commands for error free freeing
     strcpy(*command, (*lp)->t);
     for (int i = 0; builtIns[i] != NULL; i++)
     {
         if (acceptToken(lp, builtIns[i]))
             return true;
     }
+    free(*command);
     return false;
 }
 
-int executeCommand(char *command, char **options)
-{
-    pid_t pid;
-    pid = fork();
-    if (pid < 0)
-    {
-        fprintf(stderr, "fork() could not create a child process!");
-        exit(EXIT_FAILURE);
-    }
-    else if (pid == 0)
-    {
-        printf("Child process is executing...");
-        execvp(command, options);
-    }
-    else
-    { // Only parent process gets here
-        int status;
-        waitpid(pid, &status, 0);
-        if (WIFEXITED(status))
-        {
-            return WEXITSTATUS(status);
-        }
-        else
-        {
-            return -1; // Indicates abnormal termination
-        }
-    }
-    return -1;
-}
-
-/*void freeStrings(char **options){
-    if(options == NULL){
-        return;
-    }
-
-    for(int i = 0; *options != NULL; i++){
-        //free(options[i]);
-    }
-
-    //free(options);
-}*/
 
 /**
  * The function parseChain parses a chain according to the grammar:
@@ -310,77 +339,106 @@ bool parseChain(List *lp, int *statusCode)
 {
     char *command = NULL;
     char **options = NULL;
-    if (parseBuiltIn(lp, &command))
+    if (parseBuiltIn(lp, &command))                                         //Checks to see if current token is in list of built in commands
     {
-        options = (char **)malloc(sizeof(char *));
-        options[0] = command;
-        bool parsedOptions = parseOptions(lp, &options);
-        *statusCode = executeCommand(command, options);
+        if(strcmp(command, "status") == 0){
+            printf("The most recent exit code is: %d\n", *statusCode);
+            free(command);
+            return true;
+        }
+        options = (char **)malloc(sizeof(char *));                          //Initial malloc for error free freeing
+        options[0] = (char *)malloc((strlen(command) + 1) * sizeof(char));  //Initialises the first string to size of command
+        strcpy(options[0], command);                                        //Adds the command as the first string in options - as per execvp
+        bool parsedOptions = parseOptions(lp, &options);                    //Parses and adds all options if any.
+        *statusCode = executeCommand(command, options);                     //Executes command and returns the status code
 
         free(command);
-        //freeStrings(options);
+        freeStrings(&options);
         return parsedOptions;
-    }
-    if (parsePipeline(lp))
+    } 
+    else if (parsePipeline(lp, statusCode))
     {
         return parseRedirections(lp);
     }
     return false;
 }
 
-void skipToNextCommand(List *lp)
+void skipToNextCommandOr(List *lp)
 {
-    while ((*lp)->next != NULL && !skipFromOrOperator((*lp)->t))
-    {
-        (*lp) = (*lp)->next;
+    while ((*lp)->t != NULL && !skipFromOrOperator((*lp)->t))       //If current command is not the last one and is
+    {                                                               //not an \n, ; or &&, it keeps skipping.
         if ((*lp)->next == NULL)
         {
             *lp = NULL;
             break;
         }
+        (*lp) = (*lp)->next;
+    }
+
+    if(*lp != NULL)
+    {
+        if(!((*lp)->t==NULL))
+        {
+            if((strcmp((*lp)->t, ";") == 0)){
+            (*lp) = (*lp)->next;
+            }
+        }
     }
 }
+
+void skipToNextCommandAnd(List *lp)
+{
+    while ((*lp)->t != NULL && !skipFromAndOperator((*lp)->t))      //If current command is not the last one and is
+    {                                                               //not an \n, ; or &&, it keeps skipping.
+        if ((*lp)->next == NULL)
+        {
+            *lp = NULL;
+            break;
+        }
+        (*lp) = (*lp)->next;
+    }
+
+    if(*lp != NULL)
+    {
+        if(!((*lp)->t==NULL))
+        {
+            if((strcmp((*lp)->t, ";") == 0)){
+            (*lp) = (*lp)->next;
+            }
+        }
+    }
+}
+
 bool parseInputLine(List *lp);
 
 bool handleOperators(List *lp, int *exitStatus)
 {
-    // printf("status code: %d\n", *exitStatus);
-    // printf("current token: %s\n", (*lp)->t);
-    // printf("next token: %s\n", (*lp)->next->t);
-    if ((*exitStatus == 0) && (acceptToken(lp, "&&") || acceptToken(lp, "&")))
+    bool returnBool = false;
+    if ((*exitStatus == 0) && (acceptToken(lp, "&&") || acceptToken(lp, "&")))  //if prior exit code is 0 and following operator is &&, process the input line.
     {
-        // printf("currently here\n");
-        return parseInputLine(lp);
+        returnBool = parseInputLine(lp);
     }
-    else if ((*exitStatus != 0) && acceptToken(lp, "||"))
+    else if ((*exitStatus != 0) && acceptToken(lp, "||"))                       //If prior exit code is not a 0 and following operator is a ||, process the input line.
     {
-        return parseInputLine(lp);
+        returnBool = parseInputLine(lp);
     }
-    else if (*exitStatus == 0 && acceptToken(lp, "||"))
+    else if (*exitStatus == 0 && acceptToken(lp, "||"))                         //If exit code is 0 and following operator is ||
+    {                 
+        skipToNextCommandOr(lp);
+        acceptToken(lp, "&&");                                                  //it skips to either a newline, ;, or an &&
+        returnBool = parseInputLine(lp);
+    }
+    else if (*exitStatus != 0 && acceptToken(lp, "&&")){                        //If exit code is not 0, and following operator is &&
+        skipToNextCommandAnd(lp);
+        acceptToken(lp, "||");                                                  //it skips to either a newline, ;, or an ||
+        returnBool = parseInputLine(lp);
+    }
+    else if (acceptToken(lp, ";"))                                              //If there is a ;, it just parses the following command
     {
-        // printf("skipping\n");
-        skipToNextCommand(lp);
-        if (acceptToken(lp, "&&"))
-        {
-            printf("current token: %s\n", (*lp)->t);
-            skipToNextCommand(lp);
-            printf("next command\n");
-        }
-        else if (acceptToken(lp, "||"))
-        {
-            return parseInputLine(lp);
-        }
-        else if (acceptToken(lp, ";"))
-        {
-            return parseInputLine(lp);
-        }
+        returnBool = parseInputLine(lp);
     }
-    else if (acceptToken(lp, ";"))
-    {
-        printf("current token: %s\n", (*lp)->t);
-        return parseInputLine(lp);
-    }
-    return false;
+    acceptToken(lp, ";");
+    return returnBool;
 }
 
 /**
@@ -399,18 +457,20 @@ bool handleOperators(List *lp, int *exitStatus)
 bool parseInputLine(List *lp)
 {
     int exitStatus;
-
-    if (isEmpty(*lp))
+    if (isEmpty(*lp))                   //Checks if the input is empty, it returns succesfully if it is
     {
         return true;
     }
 
-    if (!parseChain(lp, &exitStatus))
+    if(strcmp((*lp)->t, "exit") == 0){  //Handles exit as input, returns exit succes here
+        exit(EXIT_SUCCESS);
+    }
+
+    if (!parseChain(lp, &exitStatus))   //Parses a chain
     {
         return false;
     }
 
-    handleOperators(lp, &exitStatus);
-
+    handleOperators(lp, &exitStatus);   //Handles the following operators and its logic if there are any.
     return true;
 }

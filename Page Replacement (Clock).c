@@ -14,9 +14,21 @@ int isInMemory(int page, int *memory, int *use_bits, int num_frames) {
 }
 
 int clock(int *page_references, int num_references, int num_frames) {
+    if (num_references == 0) {
+        return 0; // No page faults if there are no page references
+    }
+    if (num_frames <= 0 || num_references > 10000) {
+        printf("Invalid input\n");
+        return -1; // Invalid input, exit with error code
+    }
+
     int page_faults = 0;
     int *memory = (int *)malloc(num_frames * sizeof(int));
     int *use_bits = (int *)malloc(num_frames * sizeof(int));
+    if (memory == NULL || use_bits == NULL) {
+        printf("Memory allocation failed\n");
+        return -1; // Memory allocation failed, exit with error code
+    }
 
     // Initialize memory contents and use bits to 0
     for (int i = 0; i < num_frames; i++) {
@@ -48,15 +60,30 @@ int clock(int *page_references, int num_references, int num_frames) {
 
 int main() {
     int num_frames;
-    scanf("%d", &num_frames);
+    if (scanf("%d", &num_frames) != 1) {
+        printf("Invalid input\n");
+        return 1; // Invalid input, exit with error code
+    }
+    if (num_frames <= 0 || num_frames > 10) {
+        printf("Invalid number of frames\n");
+        return 1; // Invalid input, exit with error code
+    }
 
     int page_references[100]; // Assuming maximum 100 references
     int num_references = 0;
     int page;
 
-    // Read page references
-    while (scanf("%d", &page) == 1) {
+    // Read page references until a newline is encountered or maximum capacity is reached
+    while (num_references < 100 && scanf("%d", &page) == 1) {
+        if (page < 0 || page > 50) {
+            printf("Invalid page number. Please enter a number between 0 and 50.\n");
+            return 1; // Invalid input, exit with error code
+        }
         page_references[num_references++] = page;
+        char c = getchar(); // Read the next character
+        if (c == '\n') {
+            break; // Stop reading if newline is encountered
+        }
     }
 
     int faults = clock(page_references, num_references, num_frames);

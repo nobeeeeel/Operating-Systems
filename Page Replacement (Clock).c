@@ -47,7 +47,6 @@ int clock(int *page_references, int num_references, int num_frames) {
             }
             // Replace the page at the hand position
             memory[hand] = page_references[i];
-            use_bits[hand] = 1;
             hand = (hand + 1) % num_frames; // Move the hand forward
             page_faults++;
         }

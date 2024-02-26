@@ -1,97 +1,165 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 
+// Structure to represent a process
 typedef struct {
     int arrival_time;
     int *cpu_bursts;
     int *io_bursts;
     int num_bursts;
-    int current_burst_index;
-    int remaining_cpu_time;
-    int remaining_io_time;
-    int finished;
-    int completion_time; // New field to store completion time
+    int current_burst_index; // Index of current burst being executed
+    int remaining_cpu_time; // Remaining CPU time for current burst
+    int remaining_io_time; // Remaining I/O time for current burst
+    int finished; // Flag to indicate if process has finished
 } Process;
 
 void performScheduling(Process processes[], int num_processes) {
-    int current_time = 0;
-    int completed_processes = 0;
-    int *turnaround_times = (int *)malloc(num_processes * sizeof(int));
+    int current_time = 0; // Current time
+    int cpu_process_index = -1; // Index of process currently using CPU
+    int io_process_index = -1; // Index of process currently doing I/O
+    int io_completion_time = -1; // Time when the current I/O operation completes
 
-    while (completed_processes < num_processes) {
-        int next_process_index = -1;
-        int min_arrival_time = __INT_MAX__;
-
-        // Find the next process to execute
+    while (1) {
+        // Check if all processes have finished
+        int all_finished = 1;
         for (int i = 0; i < num_processes; i++) {
-            if (!processes[i].finished && processes[i].arrival_time <= current_time && processes[i].arrival_time < min_arrival_time) {
-                next_process_index = i;
-                min_arrival_time = processes[i].arrival_time;
+            if (!processes[i].finished) {
+                all_finished = 0;
+                break;
             }
         }
+        if (all_finished) {
+            break;
+        }
 
-        if (next_process_index != -1) {
-            printf("Executing CPU burst for process %d\n", next_process_index);
-            processes[next_process_index].remaining_cpu_time--;
-            current_time++;
-
-            // If CPU burst is completed
-            if (processes[next_process_index].remaining_cpu_time == 0) {
-                printf("Process %d finished its CPU burst\n", next_process_index);
-                processes[next_process_index].current_burst_index++;
-                if (processes[next_process_index].current_burst_index == processes[next_process_index].num_bursts * 2) { // Updated condition
-                    printf("Process %d finished all bursts\n", next_process_index);
-                    processes[next_process_index].finished = 1;
-                    processes[next_process_index].completion_time = current_time; // Set completion time
-                    turnaround_times[next_process_index] = current_time - processes[next_process_index].arrival_time;
-                    completed_processes++;
-                } else if (processes[next_process_index].current_burst_index % 2 == 0) { // If CPU burst just completed
-                    printf("Switching to I/O for process %d\n", next_process_index);
-                    int io_burst_index = processes[next_process_index].current_burst_index / 2;
-                    processes[next_process_index].remaining_io_time = processes[next_process_index].io_bursts[io_burst_index];
-                } else { // If I/O burst just completed
-                    printf("Switching to CPU for process %d\n", next_process_index);
-                    int cpu_burst_index = processes[next_process_index].current_burst_index / 2;
-                    processes[next_process_index].remaining_cpu_time = processes[next_process_index].cpu_bursts[cpu_burst_index];
+        // Check if any new processes arrive
+        for (int i = 0; i < num_processes; i++) {
+            if (processes[i].arrival_time == current_time && !processes[i].finished) {
+                printf("Process with arrival time %d arrived\n", current_time);
+                // Queue the new process
+                if (cpu_process_index == -1) {
+                    cpu_process_index = i; // Assign CPU to the new process if CPU is idle
+                } else if (io_process_index == -1) {
+                    io_process_index = i; // If CPU is busy, assign to I/O if I/O is idle
+                    io_completion_time = current_time + processes[i].io_bursts[processes[i].current_burst_index];
                 }
             }
-        } else {
-            current_time++;
         }
-    }
 
-    // Calculate average turnaround time
-    double total_turnaround_time = 0.0;
-    for (int i = 0; i < num_processes; i++) {
-        total_turnaround_time += turnaround_times[i];
-    }
-    double avg_turnaround_time = total_turnaround_time / num_processes;
-    printf("Average turnaround time: %.2lf\n", avg_turnaround_time);
+        // Check if any I/O operation completes
+        if (io_completion_time == current_time && io_process_index != -1) {
+            printf("I/O operation completed for process %d\n", io_process_index);
+            cpu_process_index = io_process_index; // Move the process from I/O to CPU
+            io_process_index = -1;
+            io_completion_time = -1;
+        }
 
-    free(turnaround_times);
+        // Execute CPU burst for the process using CPU
+        if (cpu_process_index != -1) {
+            printf("Executing CPU burst for process %d\n", cpu_process_index);
+            processes[cpu_process_index].remaining_cpu_time--;
+            if (processes[cpu_process_index].remaining_cpu_time == 0) {
+                // Process finishes its CPU burst
+                printf("Process %d finished its CPU burst\n", cpu_process_index);
+                processes[cpu_process_index].current_burst_index++;
+                if (processes[cpu_process_index].current_burst_index < processes[cpu_process_index].num_bursts) {
+                    // Move the process to I/O
+                    io_process_index = cpu_process_index;
+                    io_completion_time = current_time + processes[cpu_process_index].io_bursts[processes[cpu_process_index].current_burst_index];
+                } else {
+                    // Process has finished all bursts
+                    printf("Process %d finished all bursts\n", cpu_process_index);
+                    processes[cpu_process_index].finished = 1;
+                }
+                cpu_process_index = -1; // CPU becomes idle
+            }
+        }
+
+        // Execute I/O burst for the process using I/O
+        if (io_process_index != -1) {
+            printf("Executing I/O burst for process %d\n", io_process_index);
+            processes[io_process_index].remaining_io_time--;
+            if (processes[io_process_index].remaining_io_time == 0) {
+                printf("I/O burst for process %d completed\n", io_process_index);
+                // Check if there are more CPU bursts for the process
+                if (processes[io_process_index].current_burst_index < processes[io_process_index].num_bursts) {
+                    // Move the process back to CPU
+                    cpu_process_index = io_process_index;
+                    processes[io_process_index].remaining_cpu_time = processes[io_process_index].cpu_bursts[processes[io_process_index].current_burst_index];
+                } else {
+                    // Process has finished all bursts
+                    printf("Process %d finished all bursts\n", io_process_index);
+                    processes[io_process_index].finished = 1;
+                }
+                io_process_index = -1; // I/O becomes idle
+            }
+        }
+
+        current_time++;
+    }
 }
 
+
 int main() {
-    // Process 1
-    int cpu_bursts_1[] = {100, 50, 100, 100, 200};
-    int io_bursts_1[] = {25, 20, 20, 10, 0};
-    int arrival_time_1 = 0;
-    int num_bursts_1 = sizeof(cpu_bursts_1) / sizeof(cpu_bursts_1[0]);
+    // Maximum number of bursts in a process
+    int max_bursts = 100; // Adjust this value as needed
 
-    // Process 2
-    int cpu_bursts_2[] = {30, 30, 40, 50};
-    int io_bursts_2[] = {15, 10, 10, 0};
-    int arrival_time_2 = 15;
-    int num_bursts_2 = sizeof(cpu_bursts_2) / sizeof(cpu_bursts_2[0]);
+    Process processes[100]; // Adjust the size as needed
+    int num_processes = 0;
 
-    // Initialize processes
-    Process processes[] = {
-        {arrival_time_1, cpu_bursts_1, io_bursts_1, num_bursts_1, 0, cpu_bursts_1[0], io_bursts_1[0], 0, 0},
-        {arrival_time_2, cpu_bursts_2, io_bursts_2, num_bursts_2, 0, cpu_bursts_2[0], io_bursts_2[0], 0, 0}
-    };
+    // Read input
+    int arrival_time;
+    while (scanf("%d", &arrival_time) != EOF) {
+        if (arrival_time == -999) {
+            // Reached the end of input
+            break;
+        }
+        printf("Arrival time: %d\n", arrival_time);
+
+        // Reset process variables for each new process
+        int *cpu_bursts = (int *)malloc(max_bursts * sizeof(int));
+        int *io_bursts = (int *)malloc(max_bursts * sizeof(int));
+        int num_bursts = 0;
+
+        // Read CPU and I/O bursts
+        int cpu_time, io_time;
+        while (1) {
+            scanf("%d", &cpu_time);
+            if (cpu_time == -1)
+                break;
+            printf("CPU burst: %d\n", cpu_time);
+            cpu_bursts[num_bursts] = cpu_time;
+            num_bursts++;
+
+            scanf("%d", &io_time);
+            if (io_time == -1)
+                break;
+            printf("IO burst: %d\n", io_time);
+            io_bursts[num_bursts - 1] = io_time;
+        }
+
+        // Create the process
+        Process p;
+        p.arrival_time = arrival_time;
+        p.cpu_bursts = cpu_bursts;
+        p.io_bursts = io_bursts;
+        p.num_bursts = num_bursts;
+        p.current_burst_index = 0;
+        p.remaining_cpu_time = cpu_bursts[0];
+        p.remaining_io_time = io_bursts[0];
+        p.finished = 0;
+        processes[num_processes++] = p;
+    }
 
     // Perform scheduling
-    performScheduling(processes, 2);
+    performScheduling(processes, num_processes);
+
+    // Free allocated memory
+    for (int i = 0; i < num_processes; i++) {
+        free(processes[i].cpu_bursts);
+        free(processes[i].io_bursts);
+    }
 
     return 0;
 }

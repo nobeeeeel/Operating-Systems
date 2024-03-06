@@ -74,12 +74,14 @@ int executeCommand(char *command, char **options)
 //TODO: empty this
 bool parseExecutable(List *lp, char **executable)
 {
-    const char *regexPattern = "^((\\./)?[a-zA-Z0-9.]+)+$";
+    const char *regexPattern = "^(\\/?(\\w|-|_|.)*)$";
 
     regex_t regex;
-    if (regcomp(&regex, regexPattern, REG_EXTENDED) != 0)
-    {
-        printf("Failed to compile the regular expression\n");
+    int compileResult = regcomp(&regex, regexPattern, REG_EXTENDED);
+    if (compileResult != 0){
+        char errorMessage[100];
+        regerror(compileResult, &regex, errorMessage, sizeof(errorMessage));
+        printf("Failed to compile the regular expression: %s\n", errorMessage);
         return 1;
     }
 
@@ -204,24 +206,24 @@ bool parseOptions(List *lp, char ***options)
 bool parseCommand(List *lp, int *statusCode)
 {
     char *executable = (char *)malloc((strlen((*lp)->t) + 1) * sizeof(char));
-    char **options = NULL;
-    bool parsedExecutable = parseExecutable(lp, &executable);
-    bool parsedOptions = parseOptions(lp, &options);
-    char *path = getenv("PATH");
-    printf("path is: %s\n", path);
-    char *fullPath = (char*)malloc(strlen(executable) + strlen(path) + 2);
-    strcpy(fullPath, path);
-    strcat(fullPath, "/");
-    strcat(fullPath, executable);
+    char **options = (char **)malloc(sizeof(char *));
 
-    if(access(fullPath, X_OK) == 0){
-        executeCommand(fullPath, options);
+    bool parsedExecutable = parseExecutable(lp, &executable);
+
+    options[0] = (char *)malloc((strlen(executable) + 1) * sizeof(char));  //Initialises the first string to size of command
+    strcpy(options[0], executable);     
+    bool parsedOptions = parseOptions(lp, &options);
+
+    printf("%s %s\n", executable, options[0]);
+
+    executeCommand(executable, options);
+    if(access(executable, X_OK) == 0){
     } else {
         printf("Error: command not found!\n");
         *statusCode = 127;
     }
+    
     free(executable);
-    free(fullPath);
     freeStrings(&options);
     return parsedExecutable && parsedOptions;
 }

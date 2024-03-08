@@ -95,7 +95,6 @@ bool parseCommand(List *lp, int *statusCode)
 
     // Changes an input that starts with / to one without for execvp
     if (strncmp(executable, "./", 2) != 0 && strncmp(executable, "/", 1) == 0) {
-        printf("The first two characters are not './' or is '/'\n");
         memmove(executable, executable + 1, strlen(executable));
 
         // Null-terminate the string
@@ -107,11 +106,8 @@ bool parseCommand(List *lp, int *statusCode)
     strcpy(options[0], executable);     
     bool parsedOptions = parseOptions(lp, &options);
 
-    printf("%s %s\n", executable, options[0]);
-
     if(access(executable, X_OK) == 0){
         executeCommand(executable, options);
-        printf("command worked!\n");
     } else {
         printf("Error: command not found!\n");
         *statusCode = 127;

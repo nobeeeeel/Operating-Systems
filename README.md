@@ -24,6 +24,15 @@ example inputs you could try are:
 /folder/a.out // Same as above
 folder/a.out // Same as above
 
+echo a && echo b || echo c; echo d
+echo e
+exit
+
+echo hello
+echo world
+echo hello world
+exit
+
 etc etc
 
 ```

@@ -1,9 +1,13 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-
 #include "executor.h"
 
+/**
+ * @brief Takes in a command and it's options
+ * forks, and process the command.
+ * 
+ * @param command command to be executed.
+ * @param options options after the command.
+ * @return int the status code of the process.
+ */
 int executeCommand(char *command, char **options)
 {
     pid_t pid;

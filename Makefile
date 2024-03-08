@@ -6,7 +6,7 @@ rerun:
 all: shell
 
 shell:
-	gcc -std=c99 -Wall -pedantic main.c scanner/scanner.c parser/shell.c executor/executor.c -o shell
+	gcc -std=c99 -Wall -pedantic main.c scanner/scanner.c parser/shell.c executor/executor.c parser/parserAux.c -o shell
 
 clean:
 	rm -f *~

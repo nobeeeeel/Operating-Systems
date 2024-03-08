@@ -6,7 +6,8 @@
 #include <stdio.h>
 #include <sys/wait.h>
 
-#include "scanner.h"
+#include "../executor/executor.h"
+#include "../scanner/scanner.h"
 
 /**
  * The function acceptToken checks whether the current token matches a target identifier,
@@ -33,36 +34,6 @@ void freeStrings(char ***strings) {
         free(*strings);
         *strings = NULL;
     }
-}
-
-int executeCommand(char *command, char **options)
-{
-    pid_t pid;
-    pid = fork();
-    if (pid < 0)
-    {
-        fprintf(stderr, "fork() could not create a child process!");
-        exit(EXIT_FAILURE);
-    }
-    else if (pid == 0)                                                  //Child process
-    {
-        execvp(command, options);
-        exit(EXIT_FAILURE);                                             //If it got to this line, that means execvp failed and return exit failure
-    }
-    else
-    {
-        int status;
-        waitpid(pid, &status, 0);                                       //Waits for child process with that pid
-        if (WIFEXITED(status))
-        {
-            return WEXITSTATUS(status);                                 //Returns the exit status to status code
-        }
-        else
-        {
-            return -1;                                                  // Indicates abnormal termination
-        }
-    }
-    return -1;
 }
 
 
@@ -210,14 +181,25 @@ bool parseCommand(List *lp, int *statusCode)
 
     bool parsedExecutable = parseExecutable(lp, &executable);
 
+    // Changes an input that starts with / to one without for execvp
+    if (strncmp(executable, "./", 2) != 0 && strncmp(executable, "/", 1) == 0) {
+        printf("The first two characters are not './' or is '/'\n");
+        memmove(executable, executable + 1, strlen(executable));
+
+        // Null-terminate the string
+        executable[strlen(executable)] = '\0';
+
+    }
+
     options[0] = (char *)malloc((strlen(executable) + 1) * sizeof(char));  //Initialises the first string to size of command
     strcpy(options[0], executable);     
     bool parsedOptions = parseOptions(lp, &options);
 
     printf("%s %s\n", executable, options[0]);
 
-    executeCommand(executable, options);
     if(access(executable, X_OK) == 0){
+        executeCommand(executable, options);
+        printf("command worked!\n");
     } else {
         printf("Error: command not found!\n");
         *statusCode = 127;

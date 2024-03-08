@@ -3,15 +3,14 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "scanner.h"
-#include "shell.h"
+#include "scanner/scanner.h"
+#include "parser/shell.h"
 
 int main(int argc, char *argv[]) {
     char *inputLine;
     List tokenList;
     List startOfTokenList;
 
-    //TODO: Signal back that the loop must stop when "exit" has been encountered (or EOF)
     while (true) {
         inputLine = readInputLine();
 

@@ -1,7 +1,12 @@
+rerun:
+	make clean
+	make all
+	./shell
+
 all: shell
 
 shell:
-	gcc -std=c99 -Wall -pedantic main.c scanner.c shell.c -o shell
+	gcc -std=c99 -Wall -pedantic main.c scanner/scanner.c parser/shell.c executor/executor.c -o shell
 
 clean:
 	rm -f *~

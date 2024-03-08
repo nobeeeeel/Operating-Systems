@@ -1,8 +1,3 @@
-rerun:
-	make clean
-	make all
-	./shell
-
 all: shell
 
 shell:

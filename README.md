@@ -2,14 +2,28 @@
 
 1.  make sure there is a git ignore file, if not add one and 
 add the following to it:
+```
     .git
     .gitignore
     .gitattributes
     folder/*
     *.zip
+```
+
 
 2. run the following line to make a zip file as well exclude the folder folder
-zip -r clean.zip * -x "folder/*" -x "folder" -x *.zip
+```make zip```
+
 3. submit the zip file
 
-4. make sure to delete the zip file after
+
+
+example inputs you could try are:
+```
+./a.out // Assuming there is an a.out executable in root
+/folder/a.out // Same as above
+folder/a.out // Same as above
+
+etc etc
+
+```

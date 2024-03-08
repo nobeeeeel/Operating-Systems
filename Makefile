@@ -7,3 +7,6 @@ clean:
 	rm -f *~
 	rm -f *.o
 	rm -f shell
+
+zip:
+	zip -r clean.zip * -x "folder/*" -x "folder" -x *.zip

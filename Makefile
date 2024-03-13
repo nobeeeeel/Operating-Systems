@@ -8,5 +8,12 @@ clean:
 	rm -f *.o
 	rm -f shell
 
-zip:
-	zip -r clean.zip * -x "folder/*" -x "folder" -x *.zip
+zip: cleanZip zipAction
+
+cleanZip:
+	rm -f *.zip
+	rm -f shell
+	rm -rf clean
+
+zipAction:
+	zip -r clean.zip * -x "folder/*" -x "folder" -x "*.zip" -x "shell"

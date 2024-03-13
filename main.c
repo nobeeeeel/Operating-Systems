@@ -20,7 +20,8 @@ int main(int argc, char *argv[]) {
 
         tokenList = getTokenList(inputLine);
         startOfTokenList = tokenList;
-        bool parsedSuccessfully = parseInputLine(&tokenList);
+        int exitStatus = 0;
+        bool parsedSuccessfully = parseInputLine(&tokenList, &exitStatus);
         if (tokenList == NULL && parsedSuccessfully) {
             // Input was parsed successfully and can be accessed in "tokenList"
 

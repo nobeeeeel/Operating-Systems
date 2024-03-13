@@ -255,7 +255,7 @@ bool parseChain(List *lp, int *statusCode)
     return false;
 }
 
-bool parseInputLine(List *lp);
+bool parseInputLine(List *lp, int *exitStatus);
 
 /**
  * The function parseInputLine parses an inputline according to the grammar:
@@ -270,9 +270,8 @@ bool parseInputLine(List *lp);
  * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the inputline was parsed successfully.
  */
-bool parseInputLine(List *lp)
+bool parseInputLine(List *lp, int *exitStatus)
 {
-    int exitStatus;
     if (isEmpty(*lp))                   //Checks if the input is empty, it returns succesfully if it is
     {
         return true;
@@ -282,11 +281,11 @@ bool parseInputLine(List *lp)
         exit(EXIT_SUCCESS);
     }
 
-    if (!parseChain(lp, &exitStatus))   //Parses a chain
+    if (!parseChain(lp, exitStatus))   //Parses a chain
     {
         return false;
     }
 
-    handleOperators(lp, &exitStatus);   //Handles the following operators and its logic if there are any.
+    handleOperators(lp, exitStatus);   //Handles the following operators and its logic if there are any.
     return true;
 }

@@ -11,6 +11,6 @@ bool parseFileName(List *lp);
 bool parseRedirections(List *lp);
 bool parseBuiltIn(List *lp, char **command);
 bool parseChain(List *lp, int *statusCode);
-bool parseInputLine(List *lp);
+bool parseInputLine(List *lp, int *statuscode);
 
 #endif

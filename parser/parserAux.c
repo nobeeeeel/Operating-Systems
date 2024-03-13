@@ -180,26 +180,26 @@ bool handleOperators(List *lp, int *exitStatus)
     bool returnBool = false;
     if ((*exitStatus == 0) && (acceptToken(lp, "&&") || acceptToken(lp, "&")))  //if prior exit code is 0 and following operator is &&, process the input line.
     {
-        returnBool = parseInputLine(lp);
+        returnBool = parseInputLine(lp, exitStatus);
     }
     else if ((*exitStatus != 0) && acceptToken(lp, "||"))                       //If prior exit code is not a 0 and following operator is a ||, process the input line.
     {
-        returnBool = parseInputLine(lp);
+        returnBool = parseInputLine(lp, exitStatus);
     }
     else if (*exitStatus == 0 && acceptToken(lp, "||"))                         //If exit code is 0 and following operator is ||
     {                 
         skipToNextCommandOr(lp);
         acceptToken(lp, "&&");                                                  //it skips to either a newline, ;, or an &&
-        returnBool = parseInputLine(lp);
+        returnBool = parseInputLine(lp, exitStatus);
     }
     else if (*exitStatus != 0 && acceptToken(lp, "&&")){                        //If exit code is not 0, and following operator is &&
         skipToNextCommandAnd(lp);
         acceptToken(lp, "||");                                                  //it skips to either a newline, ;, or an ||
-        returnBool = parseInputLine(lp);
+        returnBool = parseInputLine(lp, exitStatus);
     }
     else if (acceptToken(lp, ";"))                                              //If there is a ;, it just parses the following command
     {
-        returnBool = parseInputLine(lp);
+        returnBool = parseInputLine(lp, exitStatus);
     }
     acceptToken(lp, ";");
     return returnBool;

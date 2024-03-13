@@ -16,11 +16,16 @@ char *readInputLine(void) {
     int c = getchar();
     int i = 0;
 
+    if (c == EOF) {
+        return NULL;
+    }
+
+
     char *s = malloc((strLen + 1) * sizeof(*s));
     assert(s != NULL);
 
     bool quoteStarted = false;
-    while (c != '\n' || quoteStarted) { // Ensure that newlines in strings are accepted
+    while ((c != '\n' && c != EOF) || quoteStarted) { // Ensure that newlines in strings are accepted
         if (c == '\"') {
             quoteStarted = !quoteStarted;
         }

@@ -60,6 +60,28 @@ bool isOperator(char *s)
     return false;
 }
 
+bool isBuiltIn(char *s)
+{
+    // NULL-terminated array makes it easy to expand this array later
+    // without changing the code at other places.
+    char *builtIns[] = {                                                    //List of commands that are recognized as built in
+        "ls",
+        "cat",
+        "exit",
+        "status",
+        "echo",
+        "false",
+        "true",
+        NULL};
+
+    for (int i = 0; builtIns[i] != NULL; i++)
+    {
+        if (strcmp(s, builtIns[i]) == 0)
+            return true;
+    }
+    return false;
+}
+
 /**
  * @brief checks wether it should
  * skip after an || operator.

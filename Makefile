@@ -16,4 +16,4 @@ cleanZip:
 	rm -rf clean
 
 zipAction:
-	zip -r clean.zip * -x "folder/*" -x "folder" -x "*.zip" -x "shell"
+	zip -r clean.zip * -x "folder/*" -x "folder" -x "*.zip" -x "shell" -x "*.txt"

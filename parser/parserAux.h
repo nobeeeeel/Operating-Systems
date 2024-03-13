@@ -10,6 +10,7 @@
 bool acceptToken(List *lp, char *ident);
 void freeStrings(char ***strings);
 bool isOperator(char *s);
+bool isBuiltIn(char *s);
 bool skipFromOrOperator(char *s);
 bool skipFromAndOperator(char *s);
 void skipToNextCommandOr(List *lp);

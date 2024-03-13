@@ -105,11 +105,12 @@ bool parseCommand(List *lp, int *statusCode)
     options[0] = (char *)malloc((strlen(executable) + 1) * sizeof(char));  //Initialises the first string to size of command
     strcpy(options[0], executable);     
     bool parsedOptions = parseOptions(lp, &options);
-
-    if(access(executable, X_OK) == 0){
+    if(isBuiltIn(executable)){
+        executeCommand(executable, options);
+    } else if(access(executable, X_OK) == 0){
         executeCommand(executable, options);
     } else {
-        printf("Error: command not found!\n");
+        printf("Error: command not found\n");
         *statusCode = 127;
     }
     
@@ -199,19 +200,11 @@ bool parseRedirections(List *lp)
  */
 bool parseBuiltIn(List *lp, char **command)
 {
-    char *builtIns[] = {                                                    //List of commands that are recognized as built in
-        "exit",
-        "status",
-        "echo",
-        "false",
-        "true",
-        NULL};
     *command = (char *)malloc((strlen((*lp)->t) + 1) * sizeof(char));       //Allocates space for the commands for error free freeing
     strcpy(*command, (*lp)->t);
-    for (int i = 0; builtIns[i] != NULL; i++)
-    {
-        if (acceptToken(lp, builtIns[i]))
-            return true;
+    if(isBuiltIn((*lp)->t)){
+        (*lp) = (*lp)->next;
+        return true;
     }
     free(*command);
     return false;

@@ -10,7 +10,7 @@
 //TODO: empty this
 bool parseExecutable(List *lp, char **executable)
 {
-    const char *regexPattern = "^(\\/?(\\w|-|_|.)*)$";
+    /*const char *regexPattern = "^(\\/?(\\w|-|_|.)*)$";
 
     regex_t regex;
     int compileResult = regcomp(&regex, regexPattern, REG_EXTENDED);
@@ -42,7 +42,10 @@ bool parseExecutable(List *lp, char **executable)
     //
     // Instead, we recommend to just do a syntactical check here, which makes
     // more sense, and defer the binary existence check to the runtime part
-    // you'll write later.
+    // you'll write later.*/
+
+    strcpy(*executable, (*lp)->t);
+    (*lp) = (*lp)->next;
 
     return true;
 }
@@ -65,7 +68,7 @@ bool parseOptions(List *lp, char ***options)
         numStrings++;
         (*lp) = (*lp)->next;
     }
-    *options = (char **)realloc(*options, (numStrings + 2) * sizeof(char *));
+    *options = (char **)realloc(*options, (numStrings + 1) * sizeof(char *));
     (*options)[numStrings] = NULL;
     return true;
 }
@@ -85,23 +88,23 @@ bool parseCommand(List *lp, int *statusCode)
 
     bool parsedExecutable = parseExecutable(lp, &executable);
 
-    // Changes an input that starts with / to one without for execvp
-    if (strncmp(executable, "./", 2) != 0 && strncmp(executable, "/", 1) == 0) {
-        memmove(executable, executable + 1, strlen(executable));
-
-        // Null-terminate the string
-        executable[strlen(executable)] = '\0';
-
-    }
 
     options[0] = (char *)malloc((strlen(executable) + 1) * sizeof(char));  //Initialises the first string to size of command
     strcpy(options[0], executable);     
     bool parsedOptions = parseOptions(lp, &options);
-    if(isBuiltIn(executable)){
-        *statusCode = executeCommand(executable, options);
-    } else if(access(executable, X_OK) == 0){
-        *statusCode = executeCommand(executable, options);
+
+    struct stat s;
+    if (stat(executable, &s) != 0) {
+        if (errno == ENOENT)
+            *statusCode = executeCommand(executable, options);
     } else {
+        memmove(executable + 2, executable, strlen(executable) + 2); // Shift characters to the right
+        executable[0] = '.'; // Add '/' at the beginning
+        executable[1] = '/'; // Add '/' at the beginning
+        *statusCode = executeCommand(executable, options);
+    }
+
+    if(*statusCode == 1 && strcmp(executable, "false")!= 0){
         printf("Error: command not found!\n");
         *statusCode = 127;
     }

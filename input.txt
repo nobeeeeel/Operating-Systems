@@ -1,6 +1,10 @@
-pwd
+echo string
+bash -c "exit 56"
+status
 cd tests
 status
-pwd
-cat file
+cd ..
+status
+status
+echo "last one"
 exit

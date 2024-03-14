@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 #include <regex.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "../scanner/scanner.h"
 #include "shell.h"

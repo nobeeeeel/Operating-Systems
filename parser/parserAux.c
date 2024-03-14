@@ -65,15 +65,9 @@ bool isBuiltIn(char *s)
     // NULL-terminated array makes it easy to expand this array later
     // without changing the code at other places.
     char *builtIns[] = {                                                    //List of commands that are recognized as built in
-        "pwd",
         "cd",
-        "ls",
-        "cat",
         "exit",
         "status",
-        "echo",
-        "false",
-        "true",
         NULL};
 
     for (int i = 0; builtIns[i] != NULL; i++)
@@ -226,7 +220,7 @@ bool handleCD(List *lp, int *exitStatus){
 
 void handleStatus(int statusCode)
 {
-    printf("The most recent exit code is: %d\n", statusCode);
+    fprintf(stdout, "The most recent exit code is: %d\n", statusCode);
 }
 
 /**

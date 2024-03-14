@@ -224,6 +224,11 @@ bool handleCD(List *lp, int *exitStatus){
     return parsedOptions;
 }
 
+void handleStatus(int statusCode)
+{
+    printf("The most recent exit code is: %d\n", statusCode);
+}
+
 /**
  * @brief logic for all status code,
  * and operators

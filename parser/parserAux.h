@@ -19,5 +19,6 @@ void skipToNextCommandAnd(List *lp);
 bool handleOperators(List *lp, int *exitStatus);
 bool handleCD(List *lp, int *exitStatus);
 bool folderExists(const char *path);
+void handleStatus(int statusCode);
 
 #endif

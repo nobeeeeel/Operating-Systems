@@ -219,11 +219,13 @@ bool parseChain(List *lp, int *statusCode)
     if (parseBuiltIn(lp, &command))                                         //Checks to see if current token is in list of built in commands
     {
         if(strcmp(command, "status") == 0){
-            printf("The most recent exit code is: %d\n", *statusCode);
+            handleStatus(*statusCode);
             free(command);
             return true;
         } else if(strcmp(command, "cd") == 0){
-            return handleCD(lp, statusCode);
+            handleCD(lp, statusCode);
+            free(command);
+            return true;
         }
 
         options = (char **)malloc(sizeof(char *));                          //Initial malloc for error free freeing

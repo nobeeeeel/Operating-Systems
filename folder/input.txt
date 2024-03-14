@@ -1,1 +1,6 @@
+pwd
+cd tests
+status
+pwd
+cat file
 exit

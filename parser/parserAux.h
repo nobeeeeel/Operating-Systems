@@ -1,9 +1,10 @@
 #ifndef SHELLAUX_H
 #define SHELLAUX_H
 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
+#include <sys/stat.h>
+#include <regex.h>
+#include <unistd.h>
+
 #include "../scanner/scanner.h"
 #include "shell.h"
 
@@ -16,5 +17,7 @@ bool skipFromAndOperator(char *s);
 void skipToNextCommandOr(List *lp);
 void skipToNextCommandAnd(List *lp);
 bool handleOperators(List *lp, int *exitStatus);
+bool handleCD(List *lp, int *exitStatus);
+bool folderExists(const char *path);
 
 #endif

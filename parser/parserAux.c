@@ -65,6 +65,8 @@ bool isBuiltIn(char *s)
     // NULL-terminated array makes it easy to expand this array later
     // without changing the code at other places.
     char *builtIns[] = {                                                    //List of commands that are recognized as built in
+        "pwd",
+        "cd",
         "ls",
         "cat",
         "exit",
@@ -186,6 +188,40 @@ void skipToNextCommandAnd(List *lp)
             }
         }
     }
+}
+
+bool folderExists(const char *path) {
+    struct stat info;
+    return stat(path, &info) == 0 && S_ISDIR(info.st_mode);
+}
+
+bool handleCD(List *lp, int *exitStatus){
+    char *executable = (char *)malloc((3) * sizeof(char));
+    char **options = (char **)malloc(sizeof(char *));
+
+    strcpy(executable, "cd"); 
+
+    options[0] = (char *)malloc((strlen(executable) + 1) * sizeof(char));  //Initialises the first string to size of command
+    strcpy(options[0], executable);
+
+
+    bool parsedOptions = parseOptions(lp, &options);
+
+    if(options[1] == NULL){
+        printf("Error: cd requires folder to navigate to!\n");
+        *exitStatus = 2; // Error
+    } else if(folderExists(options[1])){
+        chdir(options[1]);
+        *exitStatus = 0;
+    } else {
+        printf("Error: cd directory not found!\n");
+        *exitStatus = 2; // Error
+    }
+
+
+    free(executable);
+    freeStrings(&options);
+    return parsedOptions;
 }
 
 /**

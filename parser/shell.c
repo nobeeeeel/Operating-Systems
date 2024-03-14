@@ -1,11 +1,3 @@
-#include <stdbool.h>
-#include <string.h>
-#include <unistd.h>
-#include <regex.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/wait.h>
-
 #include "../executor/executor.h"
 #include "../scanner/scanner.h"
 #include "parserAux.h"
@@ -106,11 +98,11 @@ bool parseCommand(List *lp, int *statusCode)
     strcpy(options[0], executable);     
     bool parsedOptions = parseOptions(lp, &options);
     if(isBuiltIn(executable)){
-        executeCommand(executable, options);
+        *statusCode = executeCommand(executable, options);
     } else if(access(executable, X_OK) == 0){
-        executeCommand(executable, options);
+        *statusCode = executeCommand(executable, options);
     } else {
-        printf("Error: command not found\n");
+        printf("Error: command not found!\n");
         *statusCode = 127;
     }
     
@@ -230,7 +222,10 @@ bool parseChain(List *lp, int *statusCode)
             printf("The most recent exit code is: %d\n", *statusCode);
             free(command);
             return true;
+        } else if(strcmp(command, "cd") == 0){
+            return handleCD(lp, statusCode);
         }
+
         options = (char **)malloc(sizeof(char *));                          //Initial malloc for error free freeing
         options[0] = (char *)malloc((strlen(command) + 1) * sizeof(char));  //Initialises the first string to size of command
         strcpy(options[0], command);                                        //Adds the command as the first string in options - as per execvp

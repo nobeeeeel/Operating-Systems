@@ -35,7 +35,6 @@ int main(int argc, char *argv[]) {
 
         free(inputLine);
         freeTokenList(startOfTokenList);
-        //system("leaks shell");
     }
     return 0;
 }

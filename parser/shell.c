@@ -167,36 +167,39 @@
      * @return a bool denoting whether the redirections were parsed successfully.
      */
     bool parseRedirections(List *lp, int *statusCode) {
-        while (*lp != NULL && (strcmp((*lp)->t, "|") != 0 && strcmp((*lp)->t, ";") != 0 && strcmp((*lp)->t, "&&") != 0 && strcmp((*lp)->t, "||") != 0)) {
-            if (strcmp((*lp)->t, "<") == 0) {
-                // Input redirection
-                (*lp) = (*lp)->next; // Move past "<"
-                char *filename = NULL;
-                if (!parseFileName(lp, &filename)) {
-                    printf("Error: Missing input filename after '<'\n");
-                    return false;
-                }
-                // Here you can handle the input redirection using the filename
-                printf("Input redirection from file: %s\n", filename);
-                free(filename); // Free allocated memory
-            } else if (strcmp((*lp)->t, ">") == 0) {
-                // Output redirection
-                (*lp) = (*lp)->next; // Move past ">"
-                char *filename = NULL;
-                if (!parseFileName(lp, &filename)) {
-                    printf("Error: Missing output filename after '>'\n");
-                    return false;
-                }
-                // Here you can handle the output redirection using the filename
-                printf("Output redirection to file: %s\n", filename);
-                free(filename); // Free allocated memory
-            } else {
-                printf("Error: Unexpected token '%s' in redirections\n", (*lp)->t);
+        if (*lp == NULL)
+            return true; // Empty redirections are valid
+        
+        // Check for redirection patterns
+        if (strcmp((*lp)->t, ">") == 0) {
+            (*lp) = (*lp)->next; // Move past ">"
+            char *filename = NULL;
+            if (!parseFileName(lp, &filename)) {
+                printf("Error: Missing output filename after '>'\n");
                 return false;
             }
+            // Here you can handle the output redirection using the filename
+            printf("Output redirection to file: %s\n", filename);
+            free(filename); // Free allocated memory
+        } else if (strcmp((*lp)->t, "<") == 0) {
+            (*lp) = (*lp)->next; // Move past "<"
+            char *filename = NULL;
+            if (!parseFileName(lp, &filename)) {
+                printf("Error: Missing input filename after '<'\n");
+                return false;
+            }
+            // Here you can handle the input redirection using the filename
+            printf("Input redirection from file: %s\n", filename);
+            free(filename); // Free allocated memory
+        } else if (strcmp((*lp)->t, "<") != 0 && strcmp((*lp)->t, ">") != 0) {
+            printf("Error: Unexpected token '%s' in redirections\n", (*lp)->t);
+            return false;
         }
-        return true;
+
+        // Recursively continue parsing redirections
+        return parseRedirections(lp, statusCode);
     }
+
 
     /**
      * The function parseBuiltIn parses a builtin.

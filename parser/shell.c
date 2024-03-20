@@ -86,38 +86,17 @@
      * @param lp List pointer to the start of the tokenlist.
      * @return a bool denoting whether the command was parsed successfully.
      */
-    bool parseCommand(List *lp, int *statusCode)
-    {
-        char *executable = (char *)malloc((strlen((*lp)->t) + 1) * sizeof(char));
-        char **options = (char **)malloc(sizeof(char *));
+    bool parseCommand(List *lp, int *statusCode, char **command) {
 
-        bool parsedExecutable = parseExecutable(lp, &executable);
+    char *executable = (char *)malloc((strlen((*lp)->t) + 1) * sizeof(char));
+    bool parsedExecutable = parseExecutable(lp, &executable);
+    command[0] = (char *)malloc((strlen(executable) + 1) * sizeof(char));  
+    strcpy(command[0], executable);
+    bool parsedOptions = parseOptions(lp, &command);
 
-
-        options[0] = (char *)malloc((strlen(executable) + 1) * sizeof(char));  //Initialises the first string to size of command
-        strcpy(options[0], executable);     
-        bool parsedOptions = parseOptions(lp, &options);
-
-        struct stat s;
-        if (stat(executable, &s) != 0) {
-            if (errno == ENOENT)
-                *statusCode = executeCommand(executable, options);
-        } else {
-            memmove(executable + 2, executable, strlen(executable) + 2); // Shift characters to the right
-            executable[0] = '.'; // Add '.' at the beginning
-            executable[1] = '/'; // Add '/' at the beginning
-            *statusCode = executeCommand(executable, options);
-        }
-
-        if(*statusCode == 1 && strcmp(executable, "false")!= 0){
-            printf("Error: command not found!\n");
-            *statusCode = 127;
-        }
-        
-        free(executable);
-        freeStrings(&options);
-        return parsedExecutable && parsedOptions;
-    }
+    free(executable);
+    return parsedExecutable && parsedOptions;
+}
 
     /**
      * The function parsePipeline parses a pipeline according to the grammar:
@@ -128,20 +107,19 @@
      * @param lp List pointer to the start of the tokenlist.
      * @return a bool denoting whether the pipeline was parsed successfully.
      */
-    bool parsePipeline(List *lp, int *statusCode)
-    {
-        if (!parseCommand(lp, statusCode))
-        {
-            return false;
-        }
-
-        if (acceptToken(lp, "|"))
-        {
-            return parsePipeline(lp, statusCode);
-        }
-
-        return true;
+    bool parsePipeline(List *lp, int *statusCode, char ****commands) {
+    int numStrings = 0;
+    while (*lp != NULL && !isOperator((*lp)->t) && strcmp((*lp)->t, "|")!=0) {
+        char **newCommand = (char **)malloc(sizeof(char *));
+        parseCommand(lp, statusCode, newCommand);
+        *commands = (char ***)realloc(*commands, (numStrings + 1) * sizeof(char **));
+        (*commands)[numStrings] = newCommand;
+        numStrings++;
+        if(*lp != NULL && !acceptToken(lp, "|"))
+            break;
     }
+    return true;
+}
 
         /**
          * The function parseFileName parses a filename.
@@ -280,9 +258,12 @@
             freeStrings(&options);
             return parsedOptions;
         } 
-        else if (parsePipeline(lp, statusCode))
+        else
         {
-            return parseRedirections(lp, statusCode, inputOutput);
+            char ***commands = (char ***)malloc(sizeof(char **));
+            bool parsedPipeline = parsePipeline(lp, statusCode, &commands);
+
+            return parsedPipeline || parseRedirections(lp, statusCode, inputOutput);
         }
         return false;
     }
@@ -315,7 +296,6 @@
         {
             return false;
         }
-
         handleOperators(lp, exitStatus);   //Handles the following operators and its logic if there are any.
         return true;
     }

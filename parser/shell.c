@@ -166,7 +166,7 @@
      * @param lp List pointer to the start of the tokenlist.
      * @return a bool denoting whether the redirections were parsed successfully.
      */
-    bool parseRedirections(List *lp, int *statusCode, int arr[]) {
+    bool parseRedirections(List *lp, int *statusCode, char *arr[]) {
         char *redirectionSymbol = NULL;
         char *secondRedirectionSymbol = NULL;
 
@@ -256,7 +256,7 @@
     {
         char *command = NULL;
         char **options = NULL;
-        int inputOutput[2] = NULL;
+        char *inputOutput[2] = {NULL, NULL};
 
         if (parseBuiltIn(lp, &command))                                         //Checks to see if current token is in list of built in commands
         {

@@ -8,7 +8,7 @@ bool parseOptions(List *lp, char ***options);
 bool parseCommand(List *lp, int *statusCode);
 bool parsePipeline(List *lp, int *statusCode);
 bool parseFileName(List *lp, char **filename);
-bool parseRedirections(List *lp, int *statusCode);
+bool parseRedirections(List *lp, int *statusCode, char *arr[]);
 bool parseBuiltIn(List *lp, char **command);
 bool parseChain(List *lp, int *statusCode);
 bool parseInputLine(List *lp, int *statuscode);

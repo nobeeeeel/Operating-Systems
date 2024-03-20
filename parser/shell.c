@@ -164,7 +164,6 @@
             }
 
             if (strcmp(redirectionSymbol, ">") == 0) {
-                printf("Output redirection to file: %s\n", filename);
                 arr[1] = filename;
                 // Delete and recreate output file if it already exists
                 remove(filename);
@@ -176,7 +175,6 @@
                 }
                 fclose(outputFile);
             } else {
-                printf("Input redirection to file: %s\n", filename);
                 arr[0] = filename;
                 // Check if input file exists
                 FILE *inputFile = fopen(filename, "r");
@@ -198,18 +196,16 @@
             (*lp) = (*lp)->next;
 
             if (strcmp(redirectionSymbol, secondRedirectionSymbol) == 0) {
-                printf("same redirection, error\n");
+                printf("Error: input and output files cannot be equal!\n");
                 return false;
             }
 
             char *filename = NULL;
             if (!parseFileName(lp, &filename)) {
-                printf("Error: Missing output filename after '%s'\n", secondRedirectionSymbol);
                 return false;
             }
 
             if (strcmp(secondRedirectionSymbol, ">") == 0) {
-                printf("Output redirection to file: %s\n", filename);
                 arr[1] = filename;
                 // Delete and recreate output file if it already exists
                 remove(filename);
@@ -221,7 +217,6 @@
                 }
                 fclose(outputFile);
             } else {
-                printf("Input redirection to file: %s\n", filename);
                 arr[0] = filename;
                 // Check if input file exists
                 FILE *inputFile = fopen(filename, "r");

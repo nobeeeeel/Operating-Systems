@@ -1,10 +1,1 @@
-echo string
-bash -c "exit 56"
-status
-cd tests
-status
-cd ..
-status
-status
-echo "last one"
-exit
+hello world

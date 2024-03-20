@@ -1,4 +1,5 @@
 #include "executor.h"
+#include <fcntl.h>
 
 /**
  * @brief Takes in a command and it's options
@@ -11,7 +12,18 @@
 int executeCommand(char ***commands, char *inputOutput[], int numOfCommands) {
     pid_t pid;
     int status = 0;
-    //int prev_pipe = STDIN_FILENO; // Input for the first command is stdin
+    int saved_stdout;
+
+    if(inputOutput[0]!=NULL){
+
+    }
+    if(inputOutput[1]!=NULL){
+        int file_desc;
+        file_desc = open(inputOutput[1], O_WRONLY);
+        saved_stdout = dup(STDOUT_FILENO);
+        dup2(file_desc, STDOUT_FILENO);
+        close(file_desc);
+    }
 
     for (int i = 0; i<numOfCommands; i++) {
         char *executable = (char *)malloc((strlen(commands[i][0])+1)*sizeof(char));
@@ -36,7 +48,8 @@ int executeCommand(char ***commands, char *inputOutput[], int numOfCommands) {
             perror("execvp"); // Print error message
             return -1;
         } else { // Parent process
-            // Wait for the child process to finish
+            dup2(saved_stdout, STDOUT_FILENO);
+            close(saved_stdout);
             wait(NULL);
         }
     }

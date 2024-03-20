@@ -166,7 +166,7 @@
      * @param lp List pointer to the start of the tokenlist.
      * @return a bool denoting whether the redirections were parsed successfully.
      */
-    bool parseRedirections(List *lp, int *statusCode) {
+    bool parseRedirections(List *lp, int *statusCode, int arr[]) {
         char *redirectionSymbol = NULL;
         char *secondRedirectionSymbol = NULL;
 
@@ -184,12 +184,12 @@
                 free(filename);
                 return false;
             }
-            //handleRedirection(redirectionSymbol, filename);
-            // Here you can handle the output redirection using the filename
             if(strcmp(redirectionSymbol, ">") == 0){
                 printf("Output redirection to file: %s\n", filename);
+                arr[1] = filename;
             } else {
                 printf("Input redirection to file: %s\n", filename);
+                arr[0] = filename;
             }
             free(filename); // Free allocated memory
         }
@@ -212,12 +212,12 @@
                 printf("Error: Missing output filename after '>'\n");
                 return false;
             }
-            //handleRedirection(secondRedirectionSymbol, filename);
-            // Here you can handle the output redirection using the filename
             if(strcmp(secondRedirectionSymbol, ">") == 0){
                 printf("Output redirection to file: %s\n", filename);
+                arr[1] = filename;
             } else {
                 printf("Input redirection to file: %s\n", filename);
+                arr[0] = filename;
             }
             free(filename); // Free allocated memory
         }
@@ -256,6 +256,8 @@
     {
         char *command = NULL;
         char **options = NULL;
+        int inputOutput[2] = NULL;
+
         if (parseBuiltIn(lp, &command))                                         //Checks to see if current token is in list of built in commands
         {
             if(strcmp(command, "status") == 0){
@@ -280,7 +282,7 @@
         } 
         else if (parsePipeline(lp, statusCode))
         {
-            return parseRedirections(lp, statusCode);
+            return parseRedirections(lp, statusCode, inputOutput);
         }
         return false;
     }

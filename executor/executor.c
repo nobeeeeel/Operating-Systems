@@ -8,33 +8,38 @@
  * @param options options after the command.
  * @return int the status code of the process.
  */
-int executeCommand(char *command, char **options)
-{
+int executeCommand(char ***commands, char *inputOutput[]) {
     pid_t pid;
+    int status = 0;
+    //int prev_pipe = STDIN_FILENO; // Input for the first command is stdin
 
-    pid = fork();
-    if (pid < 0)
-    {
-        fprintf(stderr, "fork() could not create a child process!");
-        exit(EXIT_FAILURE);
-    }
-    else if (pid == 0)                                                  //Child process
-    {
-        execvp(command, options);
-        exit(EXIT_FAILURE);                                             //If it got to this line, that means execvp failed and return exit failure
-    }
-    else
-    {
-        int status;
-        waitpid(pid, &status, 0);                             //Waits for child process with that pid
-        if (WIFEXITED(status))
-        {
-            return WEXITSTATUS(status);                                 //Returns the exit status to status code
+    for (int i = 0; commands[i] != NULL; i++) {
+        char *executable = (char *)malloc((strlen(commands[i][0])+1)*sizeof(char));
+        strcpy(executable, commands[i][0]);
+
+        struct stat s;
+        if (stat(executable, &s) == 0 && strlen(executable) > 0) {
+            memmove(executable + 2, executable, strlen(executable) + 1); // Shift characters to the right
+            executable[0] = '.'; // Add '.' at the beginning
+            executable[1] = '/'; // Add '/' at the beginning
         }
-        else
-        {
-            return -1;                                                  // Indicates abnormal termination
+        
+        pid = fork(); // Create a new process
+        if (pid < 0) { // Error occurred
+            fprintf(stderr, "Fork failed\n");
+            return 1;
+        } else if (pid == 0) { // Child process
+
+            // Execute the command
+            status = execvp(executable, commands[i]);
+
+            perror("execvp"); // Print error message
+            return -1;
+        } else { // Parent process
+            // Wait for the child process to finish
+            wait(NULL);
         }
     }
-    return -1;
+
+    return status;
 }

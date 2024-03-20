@@ -86,13 +86,13 @@
      * @param lp List pointer to the start of the tokenlist.
      * @return a bool denoting whether the command was parsed successfully.
      */
-    bool parseCommand(List *lp, int *statusCode, char **command) {
+    bool parseCommand(List *lp, int *statusCode, char ***command) {
 
     char *executable = (char *)malloc((strlen((*lp)->t) + 1) * sizeof(char));
     bool parsedExecutable = parseExecutable(lp, &executable);
-    command[0] = (char *)malloc((strlen(executable) + 1) * sizeof(char));  
-    strcpy(command[0], executable);
-    bool parsedOptions = parseOptions(lp, &command);
+    (*command)[0] = (char *)malloc((strlen(executable) + 1) * sizeof(char));  
+    strcpy((*command)[0], executable);
+    bool parsedOptions = parseOptions(lp, command);
 
     free(executable);
     return parsedExecutable && parsedOptions;
@@ -111,7 +111,7 @@
     int numStrings = 0;
     while (*lp != NULL && !isOperator((*lp)->t) && strcmp((*lp)->t, "|")!=0) {
         char **newCommand = (char **)malloc(sizeof(char *));
-        parseCommand(lp, statusCode, newCommand);
+        parseCommand(lp, statusCode, &newCommand);
         *commands = (char ***)realloc(*commands, (numStrings + 1) * sizeof(char **));
         (*commands)[numStrings] = newCommand;
         numStrings++;
@@ -252,7 +252,7 @@
             options[0] = (char *)malloc((strlen(command) + 1) * sizeof(char));  //Initialises the first string to size of command
             strcpy(options[0], command);                                        //Adds the command as the first string in options - as per execvp
             bool parsedOptions = parseOptions(lp, &options);                    //Parses and adds all options if any.
-            *statusCode = executeCommand(command, options);                     //Executes command and returns the status code
+            *statusCode = executeCommand(&options, NULL);                     //Executes command and returns the status code
 
             free(command);
             freeStrings(&options);
@@ -262,8 +262,10 @@
         {
             char ***commands = (char ***)malloc(sizeof(char **));
             bool parsedPipeline = parsePipeline(lp, statusCode, &commands);
+            bool parseRedirection = parseRedirections(lp, statusCode, inputOutput);
 
-            return parsedPipeline && parseRedirections(lp, statusCode, inputOutput);
+            *statusCode = executeCommand(commands, inputOutput);
+            return parsedPipeline && parseRedirection;
         }
         return false;
     }

@@ -6,7 +6,7 @@
 bool parseExecutable(List *lp, char **executable);
 bool parseOptions(List *lp, char ***options);
 bool parseCommand(List *lp, int *statusCode, char ***command);
-bool parsePipeline(List *lp, int *statusCode, char ****commands);
+bool parsePipeline(List *lp, int *statusCode, char ****commands, int *numOfCommands);
 bool parseFileName(List *lp, char **filename);
 bool parseRedirections(List *lp, int *statusCode, char *arr[]);
 bool parseBuiltIn(List *lp, char **command);

@@ -9,6 +9,6 @@
 #include <sys/stat.h>
 #include <string.h>
 
-int executeCommand(char ***commands, char *inputOutput[]);
+int executeCommand(char ***commands, char *inputOutput[], int numOfCommands);
 
 #endif

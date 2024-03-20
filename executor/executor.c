@@ -8,12 +8,12 @@
  * @param options options after the command.
  * @return int the status code of the process.
  */
-int executeCommand(char ***commands, char *inputOutput[]) {
+int executeCommand(char ***commands, char *inputOutput[], int numOfCommands) {
     pid_t pid;
     int status = 0;
     //int prev_pipe = STDIN_FILENO; // Input for the first command is stdin
 
-    for (int i = 0; commands[i] != NULL; i++) {
+    for (int i = 0; i<numOfCommands; i++) {
         char *executable = (char *)malloc((strlen(commands[i][0])+1)*sizeof(char));
         strcpy(executable, commands[i][0]);
 

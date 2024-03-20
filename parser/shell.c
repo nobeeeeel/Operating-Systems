@@ -107,14 +107,13 @@
      * @param lp List pointer to the start of the tokenlist.
      * @return a bool denoting whether the pipeline was parsed successfully.
      */
-    bool parsePipeline(List *lp, int *statusCode, char ****commands) {
-    int numStrings = 0;
+    bool parsePipeline(List *lp, int *statusCode, char ****commands, int *numOfCommands) {
     while (*lp != NULL && !isOperator((*lp)->t) && strcmp((*lp)->t, "|")!=0) {
         char **newCommand = (char **)malloc(sizeof(char *));
         parseCommand(lp, statusCode, &newCommand);
-        *commands = (char ***)realloc(*commands, (numStrings + 1) * sizeof(char **));
-        (*commands)[numStrings] = newCommand;
-        numStrings++;
+        *commands = (char ***)realloc(*commands, (*numOfCommands + 1) * sizeof(char **));
+        (*commands)[*numOfCommands] = newCommand;
+        (*numOfCommands)++;
         if(*lp != NULL && !acceptToken(lp, "|"))
             break;
     }
@@ -288,7 +287,7 @@
             options[0] = (char *)malloc((strlen(command) + 1) * sizeof(char));  //Initialises the first string to size of command
             strcpy(options[0], command);                                        //Adds the command as the first string in options - as per execvp
             bool parsedOptions = parseOptions(lp, &options);                    //Parses and adds all options if any.
-            *statusCode = executeCommand(&options, NULL);                     //Executes command and returns the status code
+            *statusCode = executeCommand(&options, NULL, 1);                     //Executes command and returns the status code
 
             free(command);
             freeStrings(&options);
@@ -297,10 +296,11 @@
         else
         {
             char ***commands = (char ***)malloc(sizeof(char **));
-            bool parsedPipeline = parsePipeline(lp, statusCode, &commands);
+            int numOfCommands = 0;
+            bool parsedPipeline = parsePipeline(lp, statusCode, &commands, &numOfCommands);
             bool parseRedirection = parseRedirections(lp, statusCode, inputOutput);
 
-            *statusCode = executeCommand(commands, inputOutput);
+            *statusCode = executeCommand(commands, inputOutput, numOfCommands);
             return parsedPipeline && parseRedirection;
         }
         return false;

@@ -263,7 +263,7 @@
             char ***commands = (char ***)malloc(sizeof(char **));
             bool parsedPipeline = parsePipeline(lp, statusCode, &commands);
 
-            return parsedPipeline || parseRedirections(lp, statusCode, inputOutput);
+            return parsedPipeline && parseRedirections(lp, statusCode, inputOutput);
         }
         return false;
     }

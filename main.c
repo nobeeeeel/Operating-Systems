@@ -22,8 +22,6 @@ int main(int argc, char *argv[]) {
         tokenList = getTokenList(inputLine);
         startOfTokenList = tokenList;
         bool parsedSuccessfully = parseInputLine(&tokenList, &exitStatus);
-        printf("tokenlist is null: %d\n", tokenList==NULL);
-        printf("Parsed succesfully: %d\n", parsedSuccessfully);
         if (tokenList == NULL && parsedSuccessfully) {
             // Input was parsed successfully and can be accessed in "tokenList"
 

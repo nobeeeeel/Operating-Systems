@@ -148,9 +148,10 @@
         char *redirectionSymbol = NULL;
         char *secondRedirectionSymbol = NULL;
 
-        if ((*lp) == NULL){
+        if ((*lp) == NULL) {
             return true; // Empty redirections are valid
         }
+
         // Check for redirection patterns
         if (strcmp((*lp)->t, ">") == 0 || strcmp((*lp)->t, "<") == 0) {
             redirectionSymbol = (*lp)->t;
@@ -158,47 +159,82 @@
 
             char *filename = NULL;
             if (!parseFileName(lp, &filename)) {
-                printf("Error: Missing output filename after '>'\n");
+                printf("Error: Missing output filename after '%s'\n", redirectionSymbol);
                 free(filename);
                 return false;
             }
-            if(strcmp(redirectionSymbol, ">") == 0){
+
+            if (strcmp(redirectionSymbol, ">") == 0) {
                 printf("Output redirection to file: %s\n", filename);
                 arr[1] = filename;
+                // Delete and recreate output file if it already exists
+                remove(filename);
+                FILE *outputFile = fopen(filename, "w");
+                if (outputFile == NULL) {
+                    printf("Error: Unable to create output file: %s\n", filename);
+                    free(filename);
+                    return false;
+                }
+                fclose(outputFile);
             } else {
                 printf("Input redirection to file: %s\n", filename);
                 arr[0] = filename;
+                // Check if input file exists
+                FILE *inputFile = fopen(filename, "r");
+                if (inputFile == NULL) {
+                    printf("Error: Input file not found: %s\n", filename);
+                    free(filename);
+                    return false;
+                }
+                fclose(inputFile);
             }
-            free(filename); // Free allocated memory
         }
 
-        if ((*lp) == NULL){
+        if ((*lp) == NULL) {
             return true; // Empty redirections are valid
         }
 
         if (strcmp((*lp)->t, ">") == 0 || strcmp((*lp)->t, "<") == 0) {
             secondRedirectionSymbol = (*lp)->t;
             (*lp) = (*lp)->next;
-            
-            if(strcmp(redirectionSymbol, secondRedirectionSymbol) == 0){
+
+            if (strcmp(redirectionSymbol, secondRedirectionSymbol) == 0) {
                 printf("same redirection, error\n");
                 return false;
             }
 
             char *filename = NULL;
             if (!parseFileName(lp, &filename)) {
-                printf("Error: Missing output filename after '>'\n");
+                printf("Error: Missing output filename after '%s'\n", secondRedirectionSymbol);
                 return false;
             }
-            if(strcmp(secondRedirectionSymbol, ">") == 0){
+
+            if (strcmp(secondRedirectionSymbol, ">") == 0) {
                 printf("Output redirection to file: %s\n", filename);
                 arr[1] = filename;
+                // Delete and recreate output file if it already exists
+                remove(filename);
+                FILE *outputFile = fopen(filename, "w");
+                if (outputFile == NULL) {
+                    printf("Error: Unable to create output file: %s\n", filename);
+                    free(filename);
+                    return false;
+                }
+                fclose(outputFile);
             } else {
                 printf("Input redirection to file: %s\n", filename);
                 arr[0] = filename;
+                // Check if input file exists
+                FILE *inputFile = fopen(filename, "r");
+                if (inputFile == NULL) {
+                    printf("Error: Input file not found: %s\n", filename);
+                    free(filename);
+                    return false;
+                }
+                fclose(inputFile);
             }
-            free(filename); // Free allocated memory
         }
+
         return true;
     }
 
